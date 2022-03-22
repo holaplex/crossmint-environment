@@ -1,0 +1,150 @@
+#!/bin/bash
+# 
+# HOLA-BE - Generic API Server Backend for use in Web2 apps that connect to Web3.
+# Derived from EVIXP
+#
+# EVIXP - Generic API Server Backend for use in health studies.
+# Copyright (C) 2019 The EVIXP Authors (See AUTHORS)
+# This software is licensed under the GNU Affero General Public License, Version 3.
+# Please see the file 'LICENSE' for more detailed information.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Change this for a different app.
+appname=${appname:-crossmint}
+
+# MySQL or PostgreSQL (actually, "mysql" or "postgresql"
+database=postgresql
+# The administrative database user who can create the application database
+db_username="postgres"
+# The password for that person.  Supply dynamically on command line.
+db_password="postgres"
+
+if [ ! -f ./.env ]; then
+    cp ./.env.example ./.env
+    COPIED_ENV=true
+fi
+
+if [ ! -f ./.rails_env.rb ]; then
+    cp ./.rails_env-sample.rb ./.rails_env.rb
+    COPIED_RAILSENV=true
+fi
+
+if [ "$COPIED_RAILSENV" = true -o "$COPIED_ENV" = true ]; then
+    echo "Please check the contents of ./.env and/or ./.rails_env.rb to ensure that you like them."
+    echo "If you don't know what this means, then it's going to be okay, just re-run $0"
+    exit 0
+fi
+
+source functions.sh
+
+set -e
+
+if [ "$(uname)" = "Darwin" ]; then
+    GETOPT=$(brew --prefix gnu-getopt)/bin/getopt 2>/dev/null
+    if [ "$GETOPTS" = "" -a -f /usr/local/opt/gnu-getopt/bin/getopt ]; then
+	GETOPT=/usr/local/opt/gnu-getopt/bin/getopt
+    fi
+fi
+
+GETOPT=${GETOPT:-getopt}
+
+main() {
+    parse_args "${@}"
+    setup-database
+    create-database-config
+    install-bundler
+    install-gems
+    do-database-tasks
+}
+
+usage() {
+    local exit_code=$1
+    local message=$2
+    local progname=$(basename "$0")
+
+    if [ "$message" != "" ]; then echo "ERROR: $message"; fi
+    
+    cat <<EOF
+Usage: $progname [options]
+    -a, --app=<string>		       The db-friendly name of this application
+    -d, --database=<postgresql|mysql>  The database driver to use.  defaults to "${database}" 
+    -u, --user=<string>                The user to authenticate to the database as -- not the application user, but an admin
+                                       Defaults to '\$(whoami)' (i.e. $(whoami))
+    -r, --refresh		       Start from scratch, including gems, database config, etc.
+    -h, --help                         Print this message and exit
+    --drop                             Drop the database before proceeding
+    --seed                             Seed the database after the app is instantiated
+    -p, --password=<string>            The password for your database user
+EOF
+    exit $exit_code
+}
+
+parse_args() {
+    opts=$(${GETOPT} -o hra:p:u: -l app:,user:,password:,help,drop,seed,refresh -n 'start-developing' -- "${@}")
+    eval set -- "${opts}"
+
+#    trap 'usage 1 "error parsing arguments"' EXIT
+    while [[ "$1" != "" ]]; do
+        case "$1" in
+	    -a | --app | --appname ) appname="$2"; shift; shift ;;
+	    -d | --database ) database="$2"; shift; shift ;;
+            -u | --user ) db_username="$2"; shift; shift ;;
+            -p | --password ) db_password="$2"; shift; shift ;;
+            -r | --refresh ) refresh=true; shift ;;
+            -h | --help ) help=true; shift ;;
+            --drop ) drop=true; shift ;;
+            --seed ) seed=true; shift ;;
+            -- ) shift; break ;;
+            * ) usage 1;; 
+        esac
+    done
+
+    help=${help:-false}
+    drop=${drop:-false}
+    seed=${seed:-false}
+    refresh=${refresh:-false}
+    db_username=${db_username:-$(whoami)}
+
+    if [ "$refresh" = "true" ]; then
+	rm -f config/database.yml
+	rm -rf vendor/ruby
+	drop=true
+	seed=true
+    fi
+
+    if [ "$database" = "postgres" ]; then database=postgresql; fi
+    if [ "${help}" = "true" ]; then usage; fi
+}
+
+install-gems() {
+    trap 'usage 2 "error installing gems"' EXIT
+    bundle install --path=vendor
+    trap - EXIT
+}
+
+do-database-tasks() {
+    trap 'usage 3 "error setting up db"' EXIT
+    if [[ "${drop}" = "true" ]]; then
+        bundle exec rails db:drop
+    fi
+    bundle exec rails db:create
+    bundle exec rails db:migrate
+    if [[ "${seed}" = "true" ]]; then
+        bundle exec rails db:seed
+    fi
+    trap - EXIT
+}
+
+install-bundler() {
+    local ver=$(bundle -v 2>&1  | awk '{ print $3; }')
+    local maj=$(echo $ver | tr "." " " | awk '{ print $1; }')
+    if [ ${maj} -lt 2 ]; then
+	gem install bundler
+    fi
+}
+
+main "${@}"
+

@@ -1,0 +1,37 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  description: MyString
+  scarcity: 1
+  collection: one
+  gallery_url: MyString
+  gallery_filename: MyString
+  final_url: MyString
+  final: MyString
+  filename: MyString
+  creator: MyString
+  royalty_matrix: 1
+  legend: MyString
+  conference: one
+  school: one
+  sport: MyString
+  award: MyString
+
+two:
+  name: MyString
+  description: MyString
+  scarcity: 1
+  collection: two
+  gallery_url: MyString
+  gallery_filename: MyString
+  final_url: MyString
+  final: MyString
+  filename: MyString
+  creator: MyString
+  royalty_matrix: 1
+  legend: MyString
+  conference: two
+  school: two
+  sport: MyString
+  award: MyString
