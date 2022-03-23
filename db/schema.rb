@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_03_22_152105) do
+ActiveRecord::Schema[7.0].define(version: 2022_03_23_225242) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -55,6 +55,12 @@ ActiveRecord::Schema[7.0].define(version: 2022_03_22_152105) do
     t.string "award"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "fan_ranking_points", default: 0
+    t.float "price", default: 0.0
+    t.string "currency", default: "USD"
+    t.string "upi"
+    t.string "unlock"
+    t.string "drop_name"
     t.index ["collection_id"], name: "index_nfts_on_collection_id"
     t.index ["school_id"], name: "index_nfts_on_school_id"
   end

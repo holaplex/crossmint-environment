@@ -2,14 +2,17 @@ require "google/apis/drive_v3"
 require "googleauth"
 require "googleauth/stores/file_token_store"
 require "fileutils"
+require "uri"
+require "net/http"
 
 class Nft < ApplicationRecord
   belongs_to :collection, optional: true
   belongs_to :school, optional: true
+  has_one :conference, through: :school
   has_many :owned_nfts
   has_many :owners, through: :owned_nfts, source: :account
-  has_one :conference, through: :school
   @@google_drive = nil
+  @@google_creds = nil
 
   def self.lookup(thing)
     candidate = self.where(sku: thing).first
@@ -26,6 +29,20 @@ class Nft < ApplicationRecord
     @@google_drive.authorization = self.google_authorize
   end
   
+  def get_drive_metadata(file_id)
+    # I hate google almost as much as I hate DHH.
+    self.class.initialize_google_api if not @@google_drive
+    uri = URI("https://www.googleapis.com/drive/v3/files/#{file_id}?supportsAllDrives=true&key=#{@@google_creds[:client_id]}")
+    headers  = {
+      "Authorization" => "Bearer #{@@google_creds[:access_token]}",
+      "Accept" => "application/json"
+    }
+    https = Net::HTTP.new(uri.host,uri.port)
+    https.use_ssl = true
+    req = Net::HTTP::Get.new(uri, headers)
+    response = JSON.parse(https.request(req).body) rescue nil
+  end
+
   def get_drive_file(id, output_filename)
     self.class.initialize_google_api if not @@google_drive
     response = @@google_drive.get_file(id, supports_all_drives: true, download_dest: output_filename)
@@ -76,7 +93,7 @@ class Nft < ApplicationRecord
       $stderr.puts "-----------------------------------------------"
       credentials = authorizer.get_and_store_credentials_from_code(user_id: user_id, code: code)
     end
-
+    @@google_creds = ActiveSupport::HashWithIndifferentAccess.new(JSON.parse(YAML.load_file("token.yaml")["default"]))
     credentials
   end
 
@@ -108,7 +125,24 @@ class Nft < ApplicationRecord
     "#{ENV['NFT_ASSETS_DIR']}/images/#{self.sku || get_identifier(source_url)}.json"
   end
 
+  def nft_attributes
+    result = [
+      { trait_type: "school", value: self.school&.name },
+      { trait_type: "conference", value: self.conference&.name },
+      { trait_type: "scarcity", value: self.scarcity }
+    ]
+
+    result.push({ trait_type: "sku", value: self.sku }) if not self.sku.blank?
+    result.push({ trait_type: "upi", value: self.upi }) if not self.upi.blank?
+    result.push({ trait_type: "sport", value: self.sport }) if not self.sport.blank?
+    result.push({ trait_type: "unlock", value: self.unlock }) if not self.unlock.blank?
+    result.push({ trait_type: "award", value: self.award }) if not self.award.blank?
+
+    result
+  end
+  
   def metadata
+
     result = {
       name: self.name,
       symbol: "CLHP",
@@ -117,10 +151,8 @@ class Nft < ApplicationRecord
       image: self.gallery_filename,
       animation_url: self.final_filename,
       external_url: "https://campuslegends.com/",
-      attributes: [
-        { trait_type: "school", value: self.school&.name },
-        { trait_type: "conference", value: self.conference&.name }
-      ],
+      attributes: self.nft_attributes,
+
       collection: {
         name: self.collection.name,
         family: "Campus Legends"
@@ -159,6 +191,20 @@ class Nft < ApplicationRecord
     end
 
     result
+  end
+
+  def get_sol_price
+    uri = URI("https://api.binance.com/api/v3/ticker/price")
+    params = { symbol: "SOLUSDT" }
+    uri.query = URI.encode_www_form(params)
+    res = Net::HTTP.get_response(uri)
+    hash = JSON.parse(res.body) if res.is_a?(Net::HTTPSuccess)
+    sol_price = hash['price'].to_f if hash
+    if sol_price
+      (self.price / sol_price).round(2)
+    else
+      0.0
+    end
   end
 
 end
