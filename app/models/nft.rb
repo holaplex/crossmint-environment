@@ -138,7 +138,7 @@ class Nft < ApplicationRecord
         creators: [
           {
             share: 100,
-            addrtess: "C3nPuV9Js259Cyue6ptyR8xUTdRWFXRTntQCBJjFxTcm"
+            address: "C3nPuV9Js259Cyue6ptyR8xUTdRWFXRTntQCBJjFxTcm"
           }
         ]
       }
