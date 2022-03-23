@@ -34,4 +34,4 @@ nft-assets/*
 /vendor/ruby
 *.tar.gz
 *.zip
-
+/token.yaml
