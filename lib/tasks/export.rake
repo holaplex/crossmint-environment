@@ -9,25 +9,26 @@ require 'debug'
 
 namespace :export do
 
-  desc "Export data for crossmint.  Takes FILENAME as argument"
-  task crossmint: :environment do
+  desc "Export data for crossmint for REMINT.  Takes FILENAME as argument"
+  task remint: :environment do
 
     # Overcome the shitty limitations of rake and rails.
     ARGV.each { |a| task a.to_sym do ; end }
 
-    output = ARGV[1] rescue nil
-    if not output
-      puts "You should supply an output filename..."
-      exit
-    end
-
     owners = []
     Nft.all.each do |nft|
-      nft.write_metadata
       nft.owners.each do |owner|
         owners.push({ email: owner.email, nft_name: nft.sku, jpg: nft.gallery_filename, mp4: nft.final_filename })
       end
     end
     File.write(output, JSON.pretty_generate(owners))
+  end
+
+  desc "Export data for crossmint for drops"
+  task crossmint: :environment do
+
+    Nft.all.each do |nft|
+      nft.write_metadata
+    end
   end
 end

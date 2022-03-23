@@ -122,7 +122,7 @@ class Nft < ApplicationRecord
   end
 
   def metadata_filename
-    "#{ENV['NFT_ASSETS_DIR']}/images/#{self.sku || get_identifier(source_url)}.json"
+    "#{ENV['NFT_ASSETS_DIR']}/images/#{self.sku || get_identifier(final_url)}.json"
   end
 
   def nft_attributes
@@ -157,6 +157,7 @@ class Nft < ApplicationRecord
         name: self.collection.name,
         family: "Campus Legends"
       },
+
       properties: {
         files: [
           {
@@ -176,7 +177,9 @@ class Nft < ApplicationRecord
             share: 100,
             address: "C3nPuV9Js259Cyue6ptyR8xUTdRWFXRTntQCBJjFxTcm"
           }
-        ]
+        ],
+        price_usdc: self.price,
+        price_sol: self.get_sol_price
       }
     }
 
