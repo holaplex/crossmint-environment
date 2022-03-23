@@ -12,7 +12,8 @@ class Nft < ApplicationRecord
   @@google_drive = nil
 
   def self.lookup(thing)
-    candidate = self.where("final_url LIKE :ident", ident: "%#{thing}%").first
+    candidate = self.where(sku: thing).first
+    candidate ||= self.where("final_url LIKE :ident", ident: "%#{thing}%").first
     candidate ||= self.where("gallery_url LIKE :ident", ident: "%#{thing}%").first
     candidate ||= self.where(name: thing).first
   end
@@ -116,7 +117,10 @@ class Nft < ApplicationRecord
       image: self.gallery_filename,
       animation_url: self.final_filename,
       external_url: "https://campuslegends.com/",
-      attributes: [],
+      attributes: [
+        { trait_type: "school", value: self.school&.name },
+        { trait_type: "conference", value: self.conference&.name }
+      ],
       collection: {
         name: self.collection.name,
         family: "Campus Legends"
