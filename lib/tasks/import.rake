@@ -1,6 +1,3 @@
-require 'smarter_csv'
-require 'debug'
-
 namespace :import do
 
   STDOUT.sync = true
@@ -124,7 +121,7 @@ namespace :import do
         fields = hash.slice(:name, :description, :sku, :upi, :scarcity, :gallery_url, :fan_ranking_points, :unlock, :final_url, :creator, :royalty_matrix, :legend, :sport, :award, :price, :drop_name)
 
         nft = Nft.where(final_url: hash[:final_url]).first_or_initialize(fields)
-        
+
         if nft.errors.count > 0
           error_messages=[]
           nft.errors.each {|e| error_messages.push("#{e.attribute.to_s.capitalize} is #{e.type.to_s.gsub(/_/,' ')}") }
@@ -142,7 +139,7 @@ namespace :import do
           end
         end
 
-        nft.save if nft
+        (nft.save if nft) rescue debugger
       end
     end
     puts "Processed #{processed} records.  Number of failures: #{failed.count}"
