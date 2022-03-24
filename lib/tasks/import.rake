@@ -3,6 +3,19 @@ require 'debug'
 
 namespace :import do
 
+  STDOUT.sync = true
+  $counter = 0
+  
+  def count_it
+    $counter += 1;
+    if $counter % 10 == 0
+      print("#{$counter}")
+      puts("") if $counter % 50 == 0
+    else
+      print(".")
+    end
+  end
+
   desc "Import accounts from a CSV file"
   task accounts: :environment do
     # Overcome the shitty limitations of rake and rails.
@@ -47,7 +60,7 @@ namespace :import do
       puts "\nChunk #{chunknum}: Processed: #{processed}, Failures: #{failed.count}"
       chunknum += 1;
       chunk.each do |hash|
-        print "."
+        count_it
         processed += 1
         nft = Nft.where(final_url: hash[:final_url]).first_or_create(hash.slice(:name, :description, :sku, :scarcity, :gallery_url, :final_url, :creator, :royalty_matrix, :legend, :sport, :award))
 
@@ -98,7 +111,7 @@ namespace :import do
       chunknum += 1;
       chunk.each do |hash|
         next if hash[:name].blank? and hash[:final_url].blank?
-        print "."
+        count_it
         processed += 1
         if not hash[:price].blank?
           p = hash[:price].sub(/[$\t ]/,"").to_f rescue nil
@@ -138,7 +151,6 @@ namespace :import do
 
   desc "Get the NFT data from Google Drive"
   task assets: :environment do
-    STDOUT.sync = true
     Nft.initialize_google_api
     Nft.all.each do |nft|
       print("#{nft.name} -> jpg:")

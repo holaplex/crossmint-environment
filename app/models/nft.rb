@@ -125,6 +125,10 @@ class Nft < ApplicationRecord
     "#{ENV['NFT_ASSETS_DIR']}/images/#{self.sku || get_identifier(final_url)}.json"
   end
 
+  def candymachine_config_filename
+    "#{ENV['NFT_ASSETS_DIR']}/images/#{self.sku || get_identifier(final_url)}-candymachine.json"
+  end
+
   def nft_attributes
     result = [
       { trait_type: "school", value: self.school&.name },
@@ -178,19 +182,50 @@ class Nft < ApplicationRecord
             address: "C3nPuV9Js259Cyue6ptyR8xUTdRWFXRTntQCBJjFxTcm"
           }
         ],
-        price_usdc: self.price,
-        price_sol: self.get_sol_price
       }
     }
 
     result
   end
 
+  def candymachine_config
+
+    result = {
+      price: self.get_sol_price,
+      number: self.scarcity,
+      gatekeeper: nil,
+      solTreasuryAccount: "2YZwtDSEeu3Tnmh6bbPwWWXJywTX9jGW6jbb1Sn2Z9Pj",
+      goLiveDate: "24 Mar 2021 19:00:00 GMT",
+      endSettings: nil,
+      whitelistMintSettings: nil,
+      hiddenSettings: nil,
+      storage: "nft-storage",
+      ipfsInfuraProjectId: nil,
+      ipfsInfuraSecret: nil,
+      nftStorageKey: nil,
+      awsS3Bucket: nil,
+      noRetainAuthority: false,
+      noMutable: false
+    }
+
+    result
+  end
+  
   def write_metadata(options={force: false})
     result = true
 
     if not File.exists?(self.metadata_filename) or options[:force]
-      File.write(self.metadata_filename, JSON.pretty_generate(self.metadata))
+      result = File.write(self.metadata_filename, JSON.pretty_generate(self.metadata))
+    end
+
+    result
+  end
+
+  def write_candymachine_config(options={force: false})
+    result = true
+    
+    if not File.exists?(self.candymachine_config_filename) or options[:force]
+      result = File.write(self.candymachine_config_filename, JSON.pretty_generate(self.candymachine_config))
     end
 
     result

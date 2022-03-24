@@ -9,6 +9,18 @@ require 'debug'
 
 namespace :export do
 
+  $counter = 0
+  
+  def count_it
+    $counter += 1;
+    if $counter % 10 == 0
+      print("#{$counter}")
+      puts("") if $counter % 50 == 0
+    else
+      print(".")
+    end
+  end
+
   desc "Export data for crossmint for REMINT.  Takes FILENAME as argument"
   task remint: :environment do
 
@@ -27,8 +39,24 @@ namespace :export do
   desc "Export data for crossmint for drops"
   task crossmint: :environment do
 
-    Nft.all.each do |nft|
+    puts "Writing metadata json for #{base.count} NFTs..."
+    base = Nft.all
+    
+    base.each do |nft|
+      count_it
       nft.write_metadata
+    end
+  end
+
+  desc "Export data for candymachine configs for drops"
+  task candymachines: :environment do
+
+    base = Nft.all
+
+    puts "Writing CandyMachine configuration data for #{base.count} NFTs..."
+    base.each do |nft|
+      count_it
+      nft.write_candymachine_config
     end
   end
 end
