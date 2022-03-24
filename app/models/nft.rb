@@ -59,11 +59,13 @@ class Nft < ApplicationRecord
   end
 
   def get_file(options = {})
+    result = true
     if not File.exists?(options[:file]) or options[:force]
       identifier = get_identifier(options[:url])
       get_drive_file(identifier, options[:file])
-      self.save
+      result = self.save
     end
+    result
   end
 
   ##
@@ -121,6 +123,36 @@ class Nft < ApplicationRecord
     self.gallery_filename ||= make_image_filename(self.gallery_url, "jpg")
   end
 
+  def update_mime_types
+    update_mime_type_and_file(:gallery)
+    update_mime_type_and_file(:final)
+  end
+
+  def update_mime_type_and_file(tag)
+    magic = FileMagic.new(FileMagic::MAGIC_MIME)
+    t = (tag.to_s + "_type")
+    f = (tag.to_s + "_filename")
+
+    # If the file doesn't exist, we're fickt.
+    raise "The #{tag} file for NFT<#{self.id}> doesn't exist!" if not File.exists?(self.send(f))
+
+    # Get the file's mime type and store it.
+    self.send("#{t}=", magic.file(self.send(f)).split(";").first)
+
+    # Check that the file's extension matches the mime type.
+    wanted  = self.send(t).split("/").second
+    current = File.extname(self.send(f)).downcase.delete('.')
+
+    if (wanted != current)
+      newname = self.send(f).chomp(".#{current}") + ".#{wanted}"
+      File.rename(self.send(f), newname)
+      self.send("#{f}=", newname)
+    end
+
+    # Finally, save changes, if any.
+    save
+  end
+  
   def metadata_filename
     "#{ENV['NFT_ASSETS_DIR']}/images/#{self.sku || get_identifier(final_url)}.json"
   end
@@ -153,7 +185,6 @@ class Nft < ApplicationRecord
       description: self.description,
       seller_fee_basis_points: 1000,
       image: self.gallery_filename,
-      animation_url: self.final_filename,
       external_url: "https://campuslegends.com/",
       attributes: self.nft_attributes,
 
@@ -167,15 +198,15 @@ class Nft < ApplicationRecord
           {
             file: self.final_filename,
             uri: self.final_url,
-            type: "video/mp4"
+            type: self.final_type
           },
           {
             file: self.gallery_filename,
             uri: self.gallery_url,
-            type: "image/jpeg"
+            type: self.gallery_type
           }
         ],
-        category: "video",
+        category: self.final_type.split("/").first,
         creators: [
           {
             share: 100,
@@ -184,6 +215,8 @@ class Nft < ApplicationRecord
         ],
       }
     }
+
+    result[:animation_url] = self.final_filename if result[:category] == "video"
 
     result
   end

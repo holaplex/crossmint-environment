@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_03_23_225242) do
+ActiveRecord::Schema[7.0].define(version: 2022_03_24_143130) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -61,6 +61,8 @@ ActiveRecord::Schema[7.0].define(version: 2022_03_23_225242) do
     t.string "upi"
     t.string "unlock"
     t.string "drop_name"
+    t.string "gallery_type"
+    t.string "final_type"
     t.index ["collection_id"], name: "index_nfts_on_collection_id"
     t.index ["school_id"], name: "index_nfts_on_school_id"
   end

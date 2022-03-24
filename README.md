@@ -1,19 +1,55 @@
 # README
 
+Manage metadata and assets for creating NFT drops.  This is like a scripting environment for NFTs.
+Normally, you start with CSV files that other people give you.  Then you use a series of rake tasks to:
+* load metadata about NFTs into the database
+* load information about purchasers into the database
+* pull physical assets from whereever they live into local storage
+* print out metadata JSON about the NFTs
+* print out CandyMachine configs for the NFTs
+
+# Get Started
 ```
 ./start-developing
 docker compose up -d db
 ./start-developing
 ```
 
-first
-  *  order of business - move CSV data into database.
+# What you need before you start
+You're going to need Ruby 2.7.5 at least.  I recommend `rbenv`
+
+## OS-X Prerequisites
+```
+brew install rbenv
+rbenv install 2.7.5
+```
+
+You're going to need `libmagic`:
+```
+brew install libmagic
+```
+
+That's all.
+
+## Ubuntu Prerequisites
+I can't remember right now how to install rbenv on linux, but it isn't hard.
+
+# Normal Usage
+
+
+
+## Do a "Remint"
+
+You need a CSV file with the "right" headers.
+
+
+First order of business - move CSV data into database.
 
 ```
 bundle exec rake import:accounts ../OG-ACCOUNTS/accounts.csv
 ```
 
-Next, import information about NFTs
+Second, import information about NFTs
 
 ```
 bundle exec rake import:purchased ../OG-ACCOUNTS/purchased.csv

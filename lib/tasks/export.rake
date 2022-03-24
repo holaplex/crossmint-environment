@@ -39,9 +39,18 @@ namespace :export do
   desc "Export data for crossmint for drops"
   task crossmint: :environment do
 
+    # Overcome the shitty limitations of rake and rails.
+    ARGV.each { |a| task a.to_sym do ; end }
+
+    # If there is an argument, it is a Drop Name.
+    if ARGV[1].blank?
+      base = Nft.all
+    else
+      base = Nft.where(drop_name: ARGV[1])
+    end
+
     puts "Writing metadata json for #{base.count} NFTs..."
-    base = Nft.all
-    
+
     base.each do |nft|
       count_it
       nft.write_metadata
@@ -51,7 +60,15 @@ namespace :export do
   desc "Export data for candymachine configs for drops"
   task candymachines: :environment do
 
-    base = Nft.all
+    # Overcome the shitty limitations of rake and rails.
+    ARGV.each { |a| task a.to_sym do ; end }
+
+    # If there is an argument, it is a Drop Name.
+    if ARGV[1].blank?
+      base = Nft.all
+    else
+      base = Nft.where(drop_name: ARGV[1])
+    end
 
     puts "Writing CandyMachine configuration data for #{base.count} NFTs..."
     base.each do |nft|

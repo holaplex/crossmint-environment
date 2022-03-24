@@ -151,13 +151,37 @@ namespace :import do
 
   desc "Get the NFT data from Google Drive"
   task assets: :environment do
+    # Overcome the shitty limitations of rake and rails.
+    ARGV.each { |a| task a.to_sym do ; end }
+
+    # If there is an argument, it is a Drop Name.
+    if ARGV[1].blank?
+      base = Nft.all
+    else
+      base = Nft.where(drop_name: ARGV[1])
+    end
+
     Nft.initialize_google_api
-    Nft.all.each do |nft|
-      print("#{nft.name} -> jpg:")
-      (nft.get_gallery_file rescue (print "FAILED"; nil)) if not nft.gallery_filename
-      print("done; mp4:")
-      (nft.get_final_file rescue (print "FAILED"; nil)) if not nft.final_filename
-      puts("done.")
+
+    base.each do |nft|
+      print("#{nft.name} -> Gallery: ")
+      got_file = nft.get_gallery_file rescue nil
+      if got_file
+        nft.update_mime_type_and_file(:gallery)
+        print("#{nft.gallery_type} - #{nft.gallery_filename} ")
+      else
+        print("FAILED! ")
+      end
+
+      print("Final Media: ")
+      got_file = nft.get_final_file rescue nil
+      if got_file
+        nft.update_mime_type_and_file(:final)
+        print("#{nft.final_type} - #{nft.final_filename} ")
+      else
+        print("FAILED! ")
+      end
+      puts("")
     end
   end
 end
