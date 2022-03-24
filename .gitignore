@@ -29,7 +29,9 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
-nft-assets/*
+/nft-assets/*
+!/nft-assets/.keep
+!/nft-assets/images/.keep
 /*.json
 /vendor/ruby
 *.tar.gz
