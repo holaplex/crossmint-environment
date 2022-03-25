@@ -279,7 +279,18 @@ class Nft < ApplicationRecord
   end
 
   def as_json(options={})
-    result = super
+    result = ActiveSupport::HashWithIndifferentAccess.new(super)
+
+    if options[:frontend]
+      result.delete(:sku)
+      result[:conference] = self.conference.name if self.conference
+      result[:school] = self.school.name if self.school
+      result[:candyMachineAddress] = ""
+      result[:clientId] = ""
+      result[:image] = self.gallery_filename
+      result[:video] = self.final_filename
+    end
+
     if options[:only]
       result = {}
       options[:only].each {|s| result[s] = self.send(s)}

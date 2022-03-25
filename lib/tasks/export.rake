@@ -57,6 +57,26 @@ namespace :export do
     end
   end
 
+  desc "Export data for frontend for drops"
+  task frontend: :environment do
+
+    # Overcome the shitty limitations of rake and rails.
+    ARGV.each { |a| task a.to_sym do ; end }
+
+    # If there is an argument, it is a Drop Name.
+    drop_name = ""
+    if ARGV[1].blank?
+      base = Nft.all
+    else
+      drop_name = ARGV[1]
+      base = Nft.where(drop_name: drop_name)
+    end
+
+    puts "Writing frontend configuration data for #{base.count} NFTs..."
+    output = base.as_json(frontend: true)
+    File.write("frontend-#{drop_name.parameterize}.json", JSON.pretty_generate(output))
+  end
+  
   desc "Export data for candymachine configs for drops"
   task candymachines: :environment do
 
