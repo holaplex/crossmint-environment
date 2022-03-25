@@ -16,11 +16,27 @@ class Nft < ApplicationRecord
 
   def self.lookup(thing)
     candidate = self.where(sku: thing).first
+    candidate ||= self.where(upi: thing).first
     candidate ||= self.where("final_url LIKE :ident", ident: "%#{thing}%").first
     candidate ||= self.where("gallery_url LIKE :ident", ident: "%#{thing}%").first
     candidate ||= self.where(name: thing).first
   end
       
+  def self.import_crossmint(filename)
+    data = JSON.parse(File.read(filename))
+
+    data.each do |hash|
+      nft = self.where(upi: hash["upi"]).first
+      if nft
+        nft.cm_address   = hash["cmAddr"]
+        nft.cm_image_url = hash["image"]
+        nft.cm_video_url = hash["video"]
+        nft.clientId = hash["clientId"]
+        nft.save
+      end
+    end
+  end
+
   def self.initialize_google_api
     if not @@google_drive
       @@google_drive = Google::Apis::DriveV3::DriveService.new
@@ -283,12 +299,16 @@ class Nft < ApplicationRecord
 
     if options[:frontend]
       result.delete(:sku)
+      result.delete(:gallery_url)
+      result.delete(:final_url)
+      result.delete(:gallery_filename)
+      result.delete(:final_filename)
       result[:conference] = self.conference.name if self.conference
       result[:school] = self.school.name if self.school
-      result[:candyMachineAddress] = ""
-      result[:clientId] = ""
-      result[:image] = self.gallery_filename
-      result[:video] = self.final_filename
+      result[:candyMachineAddress] = self.cm_address
+      result[:clientId] = self.clientId
+      result[:image] = self.cm_image_url
+      result[:video] = self.cm_video_url
     end
 
     if options[:only]

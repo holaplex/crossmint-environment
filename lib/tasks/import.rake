@@ -181,4 +181,18 @@ namespace :import do
       puts("")
     end
   end
+
+  desc "Import a file of completed candymachine data from crossmint"
+  task crossmint: :environment do
+    # Overcome the shitty limitations of rake and rails.
+    ARGV.each { |a| task a.to_sym do ; end }
+
+    if ARGV[1].blank?
+      raise "import:crossmint requires a filename for the input json data"
+    end
+
+    filename = ARGV[1]
+
+    Nft.import_crossmint(filename)
+  end
 end

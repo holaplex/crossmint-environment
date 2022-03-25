@@ -10,11 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_03_24_143130) do
+ActiveRecord::Schema[7.0].define(version: 2022_03_25_194632) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "pgcrypto"
   enable_extension "plpgsql"
-  enable_extension "uuid-ossp"
 
   create_table "accounts", force: :cascade do |t|
     t.string "shopify_number"
@@ -65,6 +63,10 @@ ActiveRecord::Schema[7.0].define(version: 2022_03_24_143130) do
     t.string "drop_name"
     t.string "gallery_type"
     t.string "final_type"
+    t.string "cm_address"
+    t.string "cm_image_url"
+    t.string "cm_video_url"
+    t.string "clientId"
     t.index ["collection_id"], name: "index_nfts_on_collection_id"
     t.index ["school_id"], name: "index_nfts_on_school_id"
   end
