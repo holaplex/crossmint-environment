@@ -228,7 +228,7 @@ class Nft < ApplicationRecord
       number: self.scarcity,
       gatekeeper: nil,
       solTreasuryAccount: "2YZwtDSEeu3Tnmh6bbPwWWXJywTX9jGW6jbb1Sn2Z9Pj",
-      goLiveDate: "24 Mar 2021 19:00:00 GMT",
+      goLiveDate: "25 Mar 2022 16:00:00 GMT",
       endSettings: nil,
       whitelistMintSettings: nil,
       hiddenSettings: nil,
@@ -278,4 +278,12 @@ class Nft < ApplicationRecord
     end
   end
 
+  def as_json(options={})
+    result = super
+    if options[:only]
+      result = {}
+      options[:only].each {|s| result[s] = self.send(s)}
+    end
+    result
+  end
 end
