@@ -3,13 +3,13 @@ namespace :import do
   STDOUT.sync = true
   $counter = 0
   
-  def count_it
+  def count_it(with_char=".")
     $counter += 1;
     if $counter % 10 == 0
       print("#{$counter}")
       puts("") if $counter % 50 == 0
     else
-      print(".")
+      print(with_char)
     end
   end
 
@@ -50,41 +50,56 @@ namespace :import do
     # Process the purchased file.
     processed = 0
     failed = []
+    duplicates = []
     chunknum = 1
     filename = ARGV[1]
-    options = { :chunk_size => 500 }
+    filename ||= "../OG-ACCOUNTS/purchased.csv"
+    options = { :chunk_size => 1500 }
     n = SmarterCSV.process(filename, options) do |chunk|
       puts "\nChunk #{chunknum}: Processed: #{processed}, Failures: #{failed.count}"
       chunknum += 1;
       chunk.each do |hash|
-        count_it
         processed += 1
-        nft = Nft.where(final_url: hash[:final_url]).first_or_create(hash.slice(:name, :description, :sku, :scarcity, :gallery_url, :final_url, :creator, :royalty_matrix, :legend, :sport, :award))
+        nft = Nft.where(final_url: hash[:final_url], name: hash[:name], sku: hash[:sku]).first_or_initialize(hash.slice(:description, :scarcity, :gallery_url, :final_url, :creator, :royalty_matrix, :legend, :sport, :award))
 
         if nft.errors.count > 0
           error_messages=[]
           nft.errors.each {|e| error_messages.push("#{e.attribute.to_s.capitalize} is #{e.type.to_s.gsub(/_/,' ')}") }
           failed.append("NFT #{hash[:final_url]} was NOT saved to the database: #{error_messages.to_sentence}")
         else
-          # Fix missing name for recovery.
-          nft.name ||= hash[:name]
-          nft.description ||= hash[:description]
           if not nft.school and not hash[:school].blank?
-            nft.school = School.where(name: hash[:school]).first_or_create(conference: Conference.where(name: hash[:conference]).first_or_create)
+            nft.school = School.where(name: hash[:school]).first_or_initialize(conference: Conference.where(name: hash[:conference]).first_or_initialize)
           end
+
           if not nft.collection and not hash[:collection].blank?
-            nft.collection = Collection.where(name: hash[:collection]).first_or_create
+            nft.collection = Collection.where(name: hash[:collection]).first_or_initialize
           end
-          nft.save
-          
-          # Now attach this to the owner.
-          account = Account.where(account_number: hash[:accounts]).first
-          OwnedNft.where(nft: nft, account: account).first_or_create if account
+        end
+
+        nft.save or raise "Hell"
+
+        # Now attach this to the owner.
+        account = Account.where(account_number: hash[:accounts].to_s).first
+        if account
+          # Please note that we assume that each line represents a valid purchase, period.
+          # There is no idea of "Fred already bought this NFT, he couldn't have wanted more than one."
+          onft = OwnedNft.create(nft: nft, account: account)
+          count_it(".")
+        else
+          raise "Your file contains an account that doesn't exist in the system: #{hash[:accounts]}"
         end
       end
     end
-    puts "Processed #{processed} records.  Number of failures: #{failed.count}"
-    failed.each {|f| puts f}
+    puts "Processed #{processed} records."
+    if failed.length > 0
+      puts "#{failed.length} failures to save."
+      failed.each {|f| puts f}
+    end
+
+    if duplicates.length > 0
+      puts "#{duplicates.length} duplicates found."
+      puts "Already recorded purchases (OwnedNft): #{duplicates}"
+    end
   end
 
   desc "Import information about NFT drops from a CSV file"
