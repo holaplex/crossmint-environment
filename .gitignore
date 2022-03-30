@@ -37,3 +37,5 @@
 *.tar.gz
 *.zip
 /token.yaml
+/db/test.sqlite3
+
