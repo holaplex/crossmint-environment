@@ -210,4 +210,37 @@ namespace :import do
 
     Nft.import_crossmint(filename)
   end
+
+  desc "Import an xlsx (excel spreadsheet) of CampusLegends 'drop' data and process it"
+  task campussheet: :environment do
+    # Overcome the shitty limitations of rake and rails.
+    ARGV.each { |a| task a.to_sym do ; end }
+
+    if ARGV[1].blank?
+      raise "import:campussheet requires a filename for the input json data"
+    end
+
+    filename = ARGV[1]
+
+    xlsx = Roo::Spreadsheet.open(filename)
+    tabs = xlsx.sheets
+
+    tabs.each do |tab|
+      sheet = xlsx.sheet(tab)
+      last = sheet.last_row + 1
+
+      # Advance our row number to the first row that has "NFT Name" in it.
+      i = 0
+      i += 1 while sheet.row(i)[0] != "NFT Name" && i < last
+
+      headers = sheet.row(i)
+
+      i += 2
+      while i < last
+        count_it
+        nft = Nft.import_from_spreadsheet_row(sheet.row(i), headers, tab) if sheet.row(i)[0]
+        i += 1
+      end
+    end
+  end
 end

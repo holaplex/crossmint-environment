@@ -205,7 +205,7 @@ class Nft < ApplicationRecord
       attributes: self.nft_attributes,
 
       collection: {
-        name: self.collection.name,
+        name: self.collection&.name,
         family: "Campus Legends"
       },
 
@@ -316,5 +316,54 @@ class Nft < ApplicationRecord
       options[:only].each {|s| result[s] = self.send(s)}
     end
     result
+  end
+
+  def self.import_from_spreadsheet_row(row, headers, drop_name=nil)
+
+    map = {
+      nft_name: :name, nft_description: :description, :"edition_/_scarcity" => :scarcity,
+      gallery_image: :gallery_url, final_media: :final_url, gallery_image_asset: :gallery_url,
+      final_media_asset: :final_url
+    }
+
+    hash = {}
+    row.each_with_index do |val, idx|
+      sym = headers[idx].parameterize.gsub(/[-]/, '_').to_sym
+      sym = map[sym] if map[sym]
+      hash[sym] = val
+    end
+
+    self.import_from_hash(hash, drop_name)
+  end
+
+  def self.import_from_hash(hash, drop_name=nil)
+    if not hash[:price].blank?
+      p = hash[:price].sub(/[$\t ]/,"").to_f rescue nil
+      hash[:price] = p
+    end
+    if not hash[:fan_ranking_points].blank? and hash[:fan_ranking_points].is_a?(String)
+      hash[:fan_ranking_points] = hash[:fan_ranking_points].gsub(/[^0-9\.]/,'').to_i rescue nil
+    end
+
+    fields = hash.slice(:name, :description, :sku, :upi, :scarcity, :gallery_url, :fan_ranking_points, :unlock, :final_url, :creator, :royalty_matrix, :legend, :sport, :award, :price, :drop_name)
+
+    nft = Nft.where(final_url: hash[:final_url]).first_or_initialize(fields)
+
+    if nft.errors.count > 0
+      raise "#{hash[:name]} had errors!"
+    else
+      nft.drop_name ||= drop_name
+      nft.upi = nft.upi.gsub(/[.][0-9]$/,"") if not nft.upi.blank?
+      if not nft.school and not hash[:school].blank?
+        nft.school = School.where(name: hash[:school]).first_or_initialize(conference: Conference.where(name: hash[:conference]).first_or_initialize)
+      end
+      if not nft.collection and not hash[:collection].blank?
+        nft.collection = Collection.where(name: hash[:collection]).first_or_initialize
+      end
+    end
+
+    (nft.save if nft) rescue debugger
+
+    nft
   end
 end
