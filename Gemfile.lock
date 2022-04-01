@@ -222,6 +222,9 @@ GEM
       uber (< 0.2.0)
     retriable (3.1.2)
     rexml (3.2.5)
+    roo (2.9.0)
+      nokogiri (~> 1)
+      rubyzip (>= 1.3.0, < 3.0.0)
     ruby-filemagic (0.7.3)
     ruby-graphviz (1.2.5)
       rexml
@@ -290,6 +293,7 @@ DEPENDENCIES
   puma (~> 5.0)
   rails (~> 7.0.2, >= 7.0.2.3)
   rails-erd
+  roo (~> 2.9)
   ruby-filemagic
   selenium-webdriver
   smarter_csv

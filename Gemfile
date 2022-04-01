@@ -75,3 +75,5 @@ gem 'strscan', '= 1.0.3'
 gem 'ed25519'
 gem 'bcrypt_pbkdf'
 gem 'ruby-filemagic'
+
+gem "roo", "~> 2.9"
