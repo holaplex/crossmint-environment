@@ -28,6 +28,8 @@ namespace :export do
     ARGV.each { |a| task a.to_sym do ; end }
 
     owners = []
+    output = ARGV[1] || "remint.json"
+    
     Nft.all.each do |nft|
       nft.owners.each do |owner|
         owners.push({ email: owner.email, nft_name: nft.upi || nft.sku, jpg: nft.gallery_filename, mp4: nft.final_filename })
