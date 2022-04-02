@@ -32,7 +32,7 @@ namespace :export do
     
     Nft.all.each do |nft|
       nft.owners.each do |owner|
-        owners.push({ email: owner.email, nft_name: nft.upi || nft.sku, jpg: nft.gallery_filename, mp4: nft.final_filename })
+        owners.push({ email: owner.email, nft_name: nft.name, metadata_json: nft.metadata_filename, jpg: nft.gallery_filename, mp4: nft.final_filename })
       end
     end
     File.write(output, JSON.pretty_generate(owners))
