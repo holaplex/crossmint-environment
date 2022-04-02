@@ -101,7 +101,7 @@ namespace :export do
 
   # Find and export owners who have purchased multiple copies of specific NFTs.
   task multiples: :environment do
-    output = "mint_purchased.json"
+    output = "mint-purchased.json"
     # Brute force this - it's not clever, but it works.
     remint_these = []
     owners = []
