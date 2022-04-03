@@ -125,7 +125,7 @@ namespace :import do
         next if hash[:name].blank? and hash[:final_url].blank?
         count_it
         processed += 1
-        if not hash[:price].blank?
+        if not hash[:price].blank? and hash[:price].is_a?(String)
           p = hash[:price].sub(/[$\t ]/,"").to_f rescue nil
           hash[:price] = p
         end

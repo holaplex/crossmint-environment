@@ -342,15 +342,16 @@ class Nft < ApplicationRecord
       hash[sym] = val
     end
 
+    debugger
     self.import_from_hash(hash, drop_name)
   end
 
   def self.import_from_hash(hash, drop_name=nil)
-    if not hash[:price].blank?
+    if not hash[:price].blank? and hash[:price].is_a?(String)
       p = hash[:price].sub(/[$\t ]/,"").to_f rescue nil
       hash[:price] = p
-      debugger
     end
+
     if not hash[:fan_ranking_points].blank? and hash[:fan_ranking_points].is_a?(String)
       hash[:fan_ranking_points] = hash[:fan_ranking_points].gsub(/[^0-9\.]/,'').to_i rescue nil
     end
