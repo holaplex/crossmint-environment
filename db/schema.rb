@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_03_25_194632) do
+ActiveRecord::Schema[7.0].define(version: 2022_04_03_185249) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -67,6 +67,8 @@ ActiveRecord::Schema[7.0].define(version: 2022_03_25_194632) do
     t.string "cm_image_url"
     t.string "cm_video_url"
     t.string "clientId"
+    t.float "sol_usdt"
+    t.datetime "sol_usdt_when"
     t.index ["collection_id"], name: "index_nfts_on_collection_id"
     t.index ["school_id"], name: "index_nfts_on_school_id"
   end

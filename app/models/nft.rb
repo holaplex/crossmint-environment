@@ -270,10 +270,15 @@ class Nft < ApplicationRecord
     result
   end
 
+  $sol_usdt = nil
+  $sol_usdt_when = nil
   def write_candymachine_config(options={force: false})
     result = true
-    
     if not File.exists?(self.candymachine_config_filename) or options[:force]
+      self.price_in_sol = self.get_sol_price
+      self.sol_usdt = $sol_usdt
+      self.sol_usdt_when = $sol_usdt_when
+      self.save
       result = File.write(self.candymachine_config_filename, JSON.pretty_generate(self.candymachine_config))
     end
 
@@ -281,14 +286,18 @@ class Nft < ApplicationRecord
   end
 
   def get_sol_price
-    uri = URI("https://api.binance.com/api/v3/ticker/price")
-    params = { symbol: "SOLUSDT" }
-    uri.query = URI.encode_www_form(params)
-    res = Net::HTTP.get_response(uri)
-    hash = JSON.parse(res.body) if res.is_a?(Net::HTTPSuccess)
-    sol_price = hash['price'].to_f if hash
-    if sol_price
-      (self.price / sol_price).round(2)
+    if not $sol_usdt
+      uri = URI("https://api.binance.com/api/v3/ticker/price")
+      params = { symbol: "SOLUSDT" }
+      uri.query = URI.encode_www_form(params)
+      res = Net::HTTP.get_response(uri)
+      hash = JSON.parse(res.body) if res.is_a?(Net::HTTPSuccess)
+      $sol_usdt = hash['price'].to_f if hash
+      $sol_usdt_when = Time.new.in_time_zone("GMT")
+    end
+
+    if $sol_usdt
+      (self.price / $sol_usdt).round(2)
     else
       0.0
     end
@@ -340,6 +349,7 @@ class Nft < ApplicationRecord
     if not hash[:price].blank?
       p = hash[:price].sub(/[$\t ]/,"").to_f rescue nil
       hash[:price] = p
+      debugger
     end
     if not hash[:fan_ranking_points].blank? and hash[:fan_ranking_points].is_a?(String)
       hash[:fan_ranking_points] = hash[:fan_ranking_points].gsub(/[^0-9\.]/,'').to_i rescue nil
