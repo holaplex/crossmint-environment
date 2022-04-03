@@ -237,6 +237,20 @@ class Nft < ApplicationRecord
     result
   end
 
+  def get_golive_date
+    the_date = Date.today
+    if self.drop_name
+      date_part = self.drop_name.split(" ")[0]
+      if date_part =~ /^[0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/
+        mm,dd,yy = date_part.split("-")
+        yy = "20" + yy
+        the_date = Date.new(yy.to_i, mm.to_i, dd.to_i)
+      end
+    end
+    the_date
+  end
+      
+
   def candymachine_config
 
     result = {
@@ -244,7 +258,7 @@ class Nft < ApplicationRecord
       number: self.scarcity,
       gatekeeper: nil,
       solTreasuryAccount: "2YZwtDSEeu3Tnmh6bbPwWWXJywTX9jGW6jbb1Sn2Z9Pj",
-      goLiveDate: "25 Mar 2022 16:00:00 GMT",
+      goLiveDate: self.get_golive_date,
       endSettings: nil,
       whitelistMintSettings: nil,
       hiddenSettings: nil,
