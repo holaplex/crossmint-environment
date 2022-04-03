@@ -342,7 +342,6 @@ class Nft < ApplicationRecord
       hash[sym] = val
     end
 
-    debugger
     self.import_from_hash(hash, drop_name)
   end
 
