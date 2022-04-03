@@ -39,3 +39,4 @@
 /token.yaml
 /db/test.sqlite3
 
+*.xlsx
