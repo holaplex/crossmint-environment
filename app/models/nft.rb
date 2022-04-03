@@ -330,7 +330,7 @@ class Nft < ApplicationRecord
   def self.import_from_spreadsheet_row(row, headers, drop_name=nil)
 
     map = {
-      nft_name: :name, nft_description: :description, :"edition_/_scarcity" => :scarcity,
+      nft_name: :name, nft_description: :description, :"edition_/_scarcity" => :scarcity, edition_scarcity: :scarcity,
       gallery_image: :gallery_url, final_media: :final_url, gallery_image_asset: :gallery_url,
       final_media_asset: :final_url
     }
