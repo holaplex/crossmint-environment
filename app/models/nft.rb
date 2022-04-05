@@ -328,8 +328,11 @@ class Nft < ApplicationRecord
       result[:upi] = result[:upi].to_i
       result[:rarity] = self.scarcity
       result[:usdPrice] = "$#{self.price}"
+      result[:id] = SecureRandom.uuid
+      result[:image] = self.cm_image_url || self.gallery_url
+      result[:video] = self.cm_video_url || self.final_url
+      result[:candyMachineAddress] = self.cm_address
 
-      result.delete(:id)
       result.delete(:sku)
       result.delete(:collection_id)
       result.delete(:scarcity)
@@ -345,14 +348,13 @@ class Nft < ApplicationRecord
       result.delete(:final_filename)
       result.delete(:gallery_type)
       result.delete(:final_type)
+      result.delete(:cm_image_url)
+      result.delete(:cm_video_url)
+      result.delete(:cm_address)
 
-
-      result[:image] = self.cm_image_url || self.gallery_url
-      result[:video] = self.cm_video_url || self.final_url
       result[:collection] = self.collection&.name if self.collection
       result[:conference] = self.conference.name if self.conference
       result[:school] = self.school.name if self.school
-      result[:candyMachineAddress] = self.cm_address
       result[:clientId] = self.clientId
     end
 
