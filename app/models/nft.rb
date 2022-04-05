@@ -328,6 +328,7 @@ class Nft < ApplicationRecord
       result[:upi] = result[:upi].to_i
       result[:rarity] = self.scarcity
       result[:usdPrice] = "$#{self.price}"
+      result[:solPrice] = "$#{self.price_in_sol}"
       result[:id] = SecureRandom.uuid
       result[:image] = self.cm_image_url || self.gallery_url
       result[:video] = self.cm_video_url || self.final_url
@@ -342,6 +343,7 @@ class Nft < ApplicationRecord
       result.delete(:currency)
       result.delete(:currency)
       result.delete(:school_id)
+      result.delete(:price_in_sol)
       result.delete(:gallery_url)
       result.delete(:final_url)
       result.delete(:gallery_filename)
