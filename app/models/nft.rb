@@ -333,7 +333,8 @@ class Nft < ApplicationRecord
       result[:image] = self.cm_image_url || self.gallery_url
       result[:video] = self.cm_video_url || self.final_url
       result[:candyMachineAddress] = self.cm_address
-
+      result[:fanRankingPoints] = result[:fan_ranking_points]
+      
       result.delete(:sku)
       result.delete(:collection_id)
       result.delete(:scarcity)
@@ -344,6 +345,7 @@ class Nft < ApplicationRecord
       result.delete(:currency)
       result.delete(:school_id)
       result.delete(:price_in_sol)
+      result.delete(:fan_ranking_points)
       result.delete(:gallery_url)
       result.delete(:final_url)
       result.delete(:gallery_filename)
