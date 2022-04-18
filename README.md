@@ -7,6 +7,14 @@ Normally, you start with CSV files that other people give you.  Then you use a s
 * pull physical assets from whereever they live into local storage
 * print out metadata JSON about the NFTs
 * print out CandyMachine configs for the NFTs
+* add watermarks to files?
+
+```bash
+convert app/assets/images/watermark.png -background "rgba(0,0,0,0)"  -rotate 315 app/assets/images/watermark-45.png
+for file in *.mp4; do ffmpeg -i $file -i ../../app/assets/images/watermark-45.png -filter_complex "overlay=0:0" $(basename $file .mp4)-wm.mp4; done
+```
+
+
 
 # Get Started
 ```
