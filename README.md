@@ -10,8 +10,11 @@ Normally, you start with CSV files that other people give you.  Then you use a s
 * add watermarks to files?
 
 ```bash
-convert app/assets/images/watermark.png -background "rgba(0,0,0,0)"  -rotate 315 app/assets/images/watermark-45.png
-for file in *.mp4; do ffmpeg -i $file -i ../../app/assets/images/watermark-45.png -filter_complex "overlay=0:0" $(basename $file .mp4)-wm.mp4; done
+convert app/assets/images/watermark.png -background "rgba(0,0,0,0)"  -rotate 335 -resize '160%'  -alpha set -background none -channel A -evaluate multiply 0.4 +channel app/assets/images/watermark-45.png
+
+fmpeg -i test.mp4 -i app/assets/images/watermark-45.png -filter_complex "overlay=-350:-300" test-wm.mp4
+
+for file in *.mp4; do ffmpeg -i $file -i ../../app/assets/images/watermark-45.png -filter_complex "overlay=-350:-300" $(basename $file .mp4)-wm.mp4; done
 ```
 
 
