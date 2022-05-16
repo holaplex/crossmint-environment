@@ -133,12 +133,20 @@ class Nft < ApplicationRecord
 
   def maybe_make_final_filename
     self.final_filename ||= make_image_filename(self.final_url, "mp4")
+    self.final_filename
   end
 
   def maybe_make_gallery_filename
     self.gallery_filename ||= make_image_filename(self.gallery_url, "jpg")
+    self.gallery_filename
   end
 
+  def watermark_filename
+    f = self.maybe_make_final_filename
+    ext = File.extname(f)
+    f.gsub(ext, "-wm" + ext)
+  end
+  
   def update_mime_types
     update_mime_type_and_file(:gallery)
     update_mime_type_and_file(:final)
@@ -169,6 +177,25 @@ class Nft < ApplicationRecord
     save
   end
   
+  def has_watermark?
+    File.exists?(self.watermark_filename)
+  end
+  
+  def do_watermark(src, dst, watermark="./app/assets/images/watermark-45.png")
+    system("ffmpeg -hide_banner -loglevel error  -i #{src} -i #{watermark} -filter_complex 'overlay=-350:-300' -y #{dst}")
+  end
+  
+  def make_watermark(options={ force: false })
+    dst = self.watermark_filename
+    src = self.final_filename
+    res = true
+    if (File.exists?(src) and (not File.exists?(dst) or options[:force]))
+      res = do_watermark(src, dst, "./app/assets/images/watermark-45.png")
+    end
+
+    res
+  end
+
   def metadata_filename
     "#{ENV['NFT_ASSETS_DIR']}/images/#{self.sku || get_identifier(final_url)}.json"
   end
